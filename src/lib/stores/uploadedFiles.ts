@@ -1,5 +1,6 @@
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
-import 'pdfjs-dist/legacy/build/pdf.worker.entry';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+import 'pdfjs-dist/build/pdf.worker.mjs';	
+
 import { writable, type Writable } from 'svelte/store';
 
 export type PDFDocumentType = Awaited<ReturnType<typeof pdfjsLib.getDocument>>['promise']

@@ -1,17 +1,14 @@
 <script lang="ts">
 	import PDFMerger from 'pdf-merger-js/browser'
-	import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
-	import 'pdfjs-dist/legacy/build/pdf.worker.entry';
+	import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
+	import 'pdfjs-dist/build/pdf.worker.mjs';	
 	import { PDFDocument } from 'pdf-lib';
 	import { uploadedFiles, type PDFFile, type PDFDocumentType } from '$lib/stores/uploadedFiles'
 	import Pdf from '$lib/components/Pdf.svelte'
 	import {flip} from 'svelte/animate';
-	import { dndzone } from 'svelte-dnd-action';
-	import { onMount } from 'svelte';
 
 	let fileInput: HTMLInputElement
 	let addFileInput: HTMLInputElement
-	console.log($uploadedFiles)
 
 	const hInputFile = async (event: Event ) => {
 		if(!fileInput.files || fileInput?.files.length == 0) return
@@ -80,12 +77,13 @@
 		const page = await pdfDoc.getPage(1)
 
 		const viewport = page.getViewport({ scale: 1 });
+		if(!document) return 
 		const canvas = document.createElement('canvas');
 		const context = canvas.getContext('2d');
 		canvas.height = viewport.height;
 		canvas.width = viewport.width;
 
-		await page.render({ canvasContext: context as Object, viewport }).promise
+		await page.render({ canvasContext: context as CanvasRenderingContext2D, viewport }).promise
 		const imgUrl = canvas.toDataURL()
 		return imgUrl
 	}
