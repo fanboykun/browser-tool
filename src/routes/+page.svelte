@@ -95,6 +95,7 @@
 		const imgUrl = canvas.toDataURL()
 		return imgUrl
 	}
+
 	let processing = false
 	const beginMergePdf = async () => {
 		try {
@@ -175,50 +176,44 @@
 		return text
 	}
 
-	function validatePageInput(
-  event: Event & { currentTarget: HTMLInputElement },
-  file: PDFFile
-) {
-  const page = event.currentTarget.value.trim();
-  let finalValue: string | number | undefined;
+	function validatePageInput( event: Event & { currentTarget: HTMLInputElement }, file: PDFFile ) {
+		const page = event.currentTarget.value.trim();
+		let finalValue: string | number | undefined;
 
-  // Check for a single page number
-  if (!isNaN(Number(page))) {
-    finalValue = Number(page);
-  }
-  // Check for comma-separated page numbers
-  else if (page.includes(',')) {
-    const numberedPages = page
-      .split(',')
-      .map(p => p.trim()) // Remove any spaces
-      .filter(p => !isNaN(Number(p))) // Keep valid numbers only
-      .map(Number); // Convert to numbers
+		// Check for a single page number
+		if (!isNaN(Number(page))) {
+			finalValue = Number(page);
+		}
+		// Check for comma-separated page numbers
+		else if (page.includes(',')) {
+			const numberedPages = page
+			.split(',')
+			.map(p => p.trim()) // Remove any spaces
+			.filter(p => !isNaN(Number(p))) // Keep valid numbers only
+			.map(Number); // Convert to numbers
 
-    // Assign if there are valid pages
-    if (numberedPages.length > 0) {
-      finalValue = numberedPages.join(',');
-    }
-  }
-  // Check for page ranges (e.g., "2-5")
-  else if (page.includes('-')) {
-    const rangePattern = /^\d+-\d+$/;
+			// Assign if there are valid pages
+			if (numberedPages.length > 0) {
+			finalValue = numberedPages.join(',');
+			}
+		}
+		// Check for page ranges (e.g., "2-5")
+		else if (page.includes('-')) {
+			const rangePattern = /^\d+-\d+$/;
 
-    // Ensure it matches the pattern like "2-5"
-    if (rangePattern.test(page)) {
-      const [first, second] = page.split('-').map(Number);
+			// Ensure it matches the pattern like "2-5"
+			if (rangePattern.test(page)) {
+			const [first, second] = page.split('-').map(Number);
 
-      // Ensure the first page is less than or equal to the second page
-      if (first <= second) {
-        finalValue = `${first}-${second}`;
-      }
-    }
-  }
-
-  // If finalValue is still undefined, it means the input is invalid
-  file.selectedPage = finalValue;
-}
-
-
+			// Ensure the first page is less than or equal to the second page
+			if (first <= second) {
+				finalValue = `${first}-${second}`;
+			}
+			}
+		}
+		// If finalValue is still undefined, it means the input is invalid
+		file.selectedPage = finalValue;
+	}
 
 	/** drag and drop (reordering file position)*/
 	let draggedIndex: number | null = null;

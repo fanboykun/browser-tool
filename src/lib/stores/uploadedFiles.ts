@@ -10,7 +10,7 @@ export type PDFFile = {
     url: string;
     numPages: number;
     document?: Exclude<PDFDocumentType, undefined>;
-    selectedPage?: string
+    selectedPage?: string|number
     preview?: string
 }
 
