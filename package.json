@@ -37,6 +37,7 @@
 	"dependencies": {
 		"pdf-lib": "^1.17.1",
 		"pdf-merger-js": "^5.1.2",
-		"pdfjs-dist": "^4.6.82"
+		"pdfjs-dist": "^4.6.82",
+		"svelte-sonner": "^0.3.28"
 	}
 }

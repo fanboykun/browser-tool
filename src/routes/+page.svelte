@@ -6,6 +6,7 @@
 	import { uploadedFiles, type PDFFile, type PDFDocumentType } from '$lib/stores/uploadedFiles'
 	import Pdf from '$lib/components/Pdf.svelte'
 	import {flip} from 'svelte/animate';
+	import { Toaster, toast } from 'svelte-sonner'
 
 	let fileInput: HTMLInputElement
 	let addFileInput: HTMLInputElement
@@ -17,14 +18,20 @@
 	}
 
 	const hAddInputFile = async (event: Event ) => {
-		if(!addFileInput.files || addFileInput?.files.length == 0) return
-		const files = addFileInput.files
-		return showPdfFile(files)
+		uploading = true
+		if(!addFileInput.files || addFileInput?.files.length == 0) uploading = false
+		else {
+			const files = addFileInput.files
+			await showPdfFile(files)
+			uploading = false
+		}
 	}
 
+	let uploading = false
 	const hDropFile = async (event: DragEvent) => {
 		event.preventDefault()
 		event.stopPropagation()
+		uploading = true
 		const files: File[] = []
 
 		 if (event.dataTransfer?.items) {
@@ -46,9 +53,10 @@
 		} else {
 			console.warn('cannot retrieve items/files from drop')
 		}
-
-		if(files.length == 0) return
-		return showPdfFile(files)
+		if(files.length > 0) {
+			await showPdfFile(files)
+		}
+		uploading = false
 	}
 
 	const showPdfFile = async (files: FileList | File[]) => {
@@ -87,9 +95,10 @@
 		const imgUrl = canvas.toDataURL()
 		return imgUrl
 	}
-
+	let processing = false
 	const beginMergePdf = async () => {
 		try {
+			processing = true
 			if(!uploadedFiles) return
 			const pdfMerger = new PDFMerger()
 			let fileName = ''
@@ -121,8 +130,10 @@
 			a.href = mergedUrl
 			a.click()
 			URL.revokeObjectURL(mergedUrl)
+			processing = false
 			return window.location.reload()
 		} catch(err) {
+			processing = false
 			alert('error when merging file')
 		}
 	}
@@ -230,8 +241,16 @@
 		});
   	}
 
+	$: {
+		if(uploading == true || processing == true) {
+			let msg = uploading == true ? 'Uploading' : ''
+			msg = processing == true ? 'Processing' : msg
+			toast.info(msg)
+		}
+	}
 
 </script>
+<Toaster closeButton position="top-center" duration={1500} />
 <div class="min-w-screen min-h-screen bg-gray-100 flex justify-center">
 	<div class="flex flex-col w-full p-2 items-center justify-center bg-white shadow-lg">
 		{#if $uploadedFiles.length === 0}
@@ -254,6 +273,7 @@
 						accept=".pdf"
 						required
 						multiple
+						disabled={uploading}
 						class="sr-only"
 					>
 					</label>
@@ -266,7 +286,7 @@
 		{/if}
 
 		{#if $uploadedFiles.length > 0}
-		<div id="file_list" class="h-full mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full gap-4 place-content-center place-items-center">
+		<div id="file_list" class="h-full mt-4 max-w-xs sm:max-w-max sm:px-8 px-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full gap-4 place-content-center place-items-center">
 			{#each $uploadedFiles as file, index (file.name)}
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div 
@@ -294,7 +314,7 @@
 				</div>
 			{/each}
 			<div class="w-full min-h-40 h-full flex items-center justify-center border-2 p-4 gap-y-1 rounded-lg max-w-sm">
-				<button type="button" on:click={() => { addFileInput.click() }} class="w-full h-full border border-dashed flex justify-center items-center">
+				<button type="button" disabled={uploading} on:click={() => { addFileInput.click() }} class="w-full h-full border border-dashed flex justify-center items-center">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 text-gray-500">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
 					</svg>					  
@@ -308,12 +328,16 @@
 						accept=".pdf"
 						required
 						multiple
+						disabled={uploading}
 						class="sr-only"
 					>
 			</div>
 		</div>
-		<div class="mt-2 w-full flex items-end">
-			<button on:click={beginMergePdf} class="w-full px-4 py-2 bg-slate-800 rounded-xl shadow-md font-semibold text-md text-gray-200 hover:text-white hover:shadow-lg hover:bg-slate-900" type="button">Process</button>
+		<div class="mt-2 w-full flex items-center justify-center">
+			<button on:click={beginMergePdf} disabled={processing} class="w-fit flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 rounded-xl shadow-md font-semibold text-md text-gray-200 hover:text-white hover:shadow-lg hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50" type="button">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+				<span>Process</span>
+			</button>
 		</div>
 		{/if}
 	</div>
